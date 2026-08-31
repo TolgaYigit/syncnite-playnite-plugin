@@ -148,8 +148,8 @@ namespace PlayniteCloudSync
                 IsChecked = viewModel.Settings.SyncAchievements,
                 Margin = new Thickness(0, 0, 0, 2)
             };
-            achievementsCheckBox.Checked += (s, e) => viewModel.Settings.SyncAchievements = true;
-            achievementsCheckBox.Unchecked += (s, e) => viewModel.Settings.SyncAchievements = false;
+            achievementsCheckBox.Checked += AchievementsCheckBox_Changed;
+            achievementsCheckBox.Unchecked += AchievementsCheckBox_Changed;
             syncPanel.Children.Add(achievementsCheckBox);
 
             achievementsStatusText = new TextBlock
@@ -207,7 +207,17 @@ namespace PlayniteCloudSync
             var installed = AchievementsReader.IsSupportedPluginInstalled(plugin.PlayniteApi);
             var enabled = AchievementsReader.IsSupportedPluginEnabled(plugin.PlayniteApi);
 
+            // Set IsChecked without going through AchievementsCheckBox_Changed - while disabled
+            // it should visually read as off (there's nothing to sync), but that's a display
+            // fact, not a change to the user's saved preference, which should reappear as-is
+            // once the companion plugin becomes available again.
+            achievementsCheckBox.Checked -= AchievementsCheckBox_Changed;
+            achievementsCheckBox.Unchecked -= AchievementsCheckBox_Changed;
             achievementsCheckBox.IsEnabled = enabled;
+            achievementsCheckBox.IsChecked = enabled && viewModel.Settings.SyncAchievements;
+            achievementsCheckBox.Checked += AchievementsCheckBox_Changed;
+            achievementsCheckBox.Unchecked += AchievementsCheckBox_Changed;
+
             if (!installed)
             {
                 achievementsStatusText.Text =
@@ -223,6 +233,11 @@ namespace PlayniteCloudSync
             {
                 achievementsStatusText.Text = "Detected: PlayniteAchievements is installed and enabled.";
             }
+        }
+
+        private void AchievementsCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            viewModel.Settings.SyncAchievements = achievementsCheckBox.IsChecked == true;
         }
 
         private async void ConnectButton_Click(object sender, RoutedEventArgs e)
