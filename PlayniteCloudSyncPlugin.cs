@@ -101,8 +101,9 @@ namespace PlayniteCloudSync
             });
         }
 
-        /// Pushes the current library. Throws on failure (callers driving UI need the error);
-        /// background triggers go through FireAndForgetSync, which catches and logs instead.
+        /// Pushes the current library, then pulls down any edits made on the web since the
+        /// last pull. Throws on failure (callers driving UI need the error); background
+        /// triggers go through FireAndForgetSync, which catches and logs instead.
         public async Task<int> SyncNowAsync()
         {
             var settings = LoadPluginSettings<CloudSyncSettings>();
@@ -111,6 +112,8 @@ namespace PlayniteCloudSync
                 logger.Debug("Playnite Cloud Sync: not connected, skipping sync.");
                 return 0;
             }
+
+            var client = new CloudSyncApiClient(settings.ApiBaseUrl, settings.DeviceToken);
 
             var games = PlayniteApi.Database.Games
                 .Where(g => !g.Hidden)
@@ -125,14 +128,67 @@ namespace PlayniteCloudSync
                 })
                 .ToList();
 
-            var client = new CloudSyncApiClient(settings.ApiBaseUrl, settings.DeviceToken);
-            var count = await client.PushGamesAsync(games);
-            logger.Info($"Playnite Cloud Sync: pushed {count} games.");
-
+            var pushedCount = await client.PushGamesAsync(games);
+            logger.Info($"Playnite Cloud Sync: pushed {pushedCount} games.");
             settings.LastSyncedAt = DateTime.UtcNow;
+
+            var pulledCount = await PullFromCloudAsync(settings, client);
+            logger.Info($"Playnite Cloud Sync: applied {pulledCount} edits from the web.");
+
             SavePluginSettings(settings);
             settingsViewModel.RefreshFromDisk();
-            return count;
+            return pushedCount;
+        }
+
+        private async Task<int> PullFromCloudAsync(CloudSyncSettings settings, CloudSyncApiClient client)
+        {
+            var result = await client.PullGamesAsync(settings.LastPulledAt);
+            var applied = 0;
+
+            foreach (var pulled in result.Games ?? new List<PullGame>())
+            {
+                if (!Guid.TryParse(pulled.PlayniteId, out var gameId))
+                {
+                    logger.Warn($"Playnite Cloud Sync: could not parse playnite_id '{pulled.PlayniteId}' as a Guid.");
+                    continue;
+                }
+
+                var game = PlayniteApi.Database.Games.Get(gameId);
+                if (game == null)
+                {
+                    // Game no longer exists in this PC's library (removed, or belongs to a
+                    // different device's copy of the same title) - nothing to apply it to.
+                    continue;
+                }
+
+                game.Notes = pulled.Notes;
+                game.Favorite = pulled.Favorite;
+                game.Hidden = pulled.Hidden;
+                game.TagIds = (pulled.Tags ?? new List<string>())
+                    .Select(name => PlayniteApi.Database.Tags.Add(name).Id)
+                    .ToList();
+                game.CategoryIds = (pulled.Categories ?? new List<string>())
+                    .Select(name => PlayniteApi.Database.Categories.Add(name).Id)
+                    .ToList();
+                game.CompletionStatusId = string.IsNullOrEmpty(pulled.CompletionStatus)
+                    ? Guid.Empty
+                    : PlayniteApi.Database.CompletionStatuses.Add(pulled.CompletionStatus).Id;
+
+                PlayniteApi.Database.Games.Update(game);
+                applied++;
+            }
+
+            if (!string.IsNullOrEmpty(result.ServerTime) &&
+                DateTime.TryParse(
+                    result.ServerTime,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind,
+                    out var serverTime))
+            {
+                settings.LastPulledAt = serverTime;
+            }
+
+            return applied;
         }
     }
 }

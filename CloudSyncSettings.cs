@@ -11,6 +11,7 @@ namespace PlayniteCloudSync
         private bool autoSyncEnabled = true;
         private int autoSyncIntervalMinutes = 15;
         private DateTime? lastSyncedAt;
+        private DateTime? lastPulledAt;
 
         public string ApiBaseUrl
         {
@@ -42,6 +43,14 @@ namespace PlayniteCloudSync
             set => SetField(ref lastSyncedAt, value);
         }
 
+        // Cursor for incremental pulls - the server's clock, not this PC's, to avoid clock-skew
+        // gaps. Kept separate from LastSyncedAt (push) since push/pull can fail independently.
+        public DateTime? LastPulledAt
+        {
+            get => lastPulledAt;
+            set => SetField(ref lastPulledAt, value);
+        }
+
         public bool IsConnected => !string.IsNullOrEmpty(DeviceToken);
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -69,7 +78,8 @@ namespace PlayniteCloudSync
                 deviceToken = this.deviceToken,
                 autoSyncEnabled = this.autoSyncEnabled,
                 autoSyncIntervalMinutes = this.autoSyncIntervalMinutes,
-                lastSyncedAt = this.lastSyncedAt
+                lastSyncedAt = this.lastSyncedAt,
+                lastPulledAt = this.lastPulledAt
             };
         }
 
@@ -80,6 +90,7 @@ namespace PlayniteCloudSync
             AutoSyncEnabled = other.autoSyncEnabled;
             AutoSyncIntervalMinutes = other.autoSyncIntervalMinutes;
             LastSyncedAt = other.lastSyncedAt;
+            LastPulledAt = other.lastPulledAt;
         }
     }
 }

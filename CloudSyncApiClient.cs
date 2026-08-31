@@ -28,6 +28,39 @@ namespace PlayniteCloudSync
         public string LastPlayed { get; set; }
     }
 
+    public class PullGame
+    {
+        [JsonProperty("playnite_id")]
+        public string PlayniteId { get; set; }
+
+        [JsonProperty("tags")]
+        public List<string> Tags { get; set; }
+
+        [JsonProperty("categories")]
+        public List<string> Categories { get; set; }
+
+        [JsonProperty("notes")]
+        public string Notes { get; set; }
+
+        [JsonProperty("completion_status")]
+        public string CompletionStatus { get; set; }
+
+        [JsonProperty("favorite")]
+        public bool Favorite { get; set; }
+
+        [JsonProperty("hidden")]
+        public bool Hidden { get; set; }
+    }
+
+    public class PullResult
+    {
+        [JsonProperty("games")]
+        public List<PullGame> Games { get; set; }
+
+        [JsonProperty("server_time")]
+        public string ServerTime { get; set; }
+    }
+
     public class CloudSyncApiClient
     {
         private readonly string apiBaseUrl;
@@ -76,6 +109,32 @@ namespace PlayniteCloudSync
 
                     var result = JsonConvert.DeserializeObject<Dictionary<string, int>>(body);
                     return result.ContainsKey("upserted") ? result["upserted"] : 0;
+                }
+            }
+        }
+
+        public async Task<PullResult> PullGamesAsync(DateTime? since)
+        {
+            var url = apiBaseUrl + "/api/sync/pull";
+            if (since.HasValue)
+            {
+                url += "?since=" + Uri.EscapeDataString(since.Value.ToString("o"));
+            }
+
+            using (var request = new HttpRequestMessage(HttpMethod.Get, url))
+            {
+                request.Headers.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", deviceToken);
+
+                using (var response = await http.SendAsync(request))
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new CloudSyncApiException(ExtractError(body, response.StatusCode));
+                    }
+
+                    return JsonConvert.DeserializeObject<PullResult>(body);
                 }
             }
         }
