@@ -166,6 +166,7 @@ namespace PlayniteCloudSync
                         PlayniteId = g.Id.ToString(),
                         Name = g.Name,
                         Source = g.Source?.Name,
+                        SourceGameId = g.GameId,
                         InstallStatus = g.IsInstalled ? "Installed" : "Uninstalled",
                         PlaytimeMinutes = (long)(g.Playtime / 60),
                         LastPlayed = g.LastActivity?.ToUniversalTime().ToString("o"),

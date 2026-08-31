@@ -19,6 +19,9 @@ namespace PlayniteCloudSync
         [JsonProperty("source")]
         public string Source { get; set; }
 
+        [JsonProperty("source_game_id")]
+        public string SourceGameId { get; set; }
+
         [JsonProperty("install_status")]
         public string InstallStatus { get; set; }
 
