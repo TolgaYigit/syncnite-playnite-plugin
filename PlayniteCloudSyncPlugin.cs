@@ -20,6 +20,7 @@ namespace PlayniteCloudSync
 
         public PlayniteCloudSyncPlugin(IPlayniteAPI api) : base(api)
         {
+            Properties = new GenericPluginProperties { HasSettings = true };
             settingsViewModel = new CloudSyncSettingsViewModel(this);
         }
 
