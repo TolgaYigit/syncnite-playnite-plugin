@@ -13,7 +13,17 @@
     <!-- Lets `dotnet build` compile a net462 target without a full Visual Studio / Framework install. -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageReference Include="PlayniteSDK" Version="6.11.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <!-- Pinned to match Playnite's own bundled Newtonsoft.Json assembly version (10.0.0.0)
+         exactly. Playnite's packer (Toolbox pack) strips same-named DLLs from .pext files on
+         the assumption the host already provides them - it doesn't check version, so a newer
+         Newtonsoft.Json here would compile fine but fail at runtime with a FileLoadException
+         once actually installed via .pext (manual folder-copy deploys masked this, since that
+         path keeps our own copy alongside the plugin). NuGet flags a known high-severity CVE
+         in 10.0.3 (GHSA-5crp-9r3c-p9vr, insecure deserialization) - not applicable here, since
+         that requires TypeNameHandling set to Auto/All/Objects and we never set it (default
+         None), and every DeserializeObject call below targets a known plain POCO, never an
+         attacker-chosen type. -->
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
