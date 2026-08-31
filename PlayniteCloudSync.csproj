@@ -24,6 +24,14 @@
          None), and every DeserializeObject call below targets a known plain POCO, never an
          attacker-chosen type. -->
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <!-- Reads the PlayniteAchievements plugin's own SQLite cache (achievement_cache.db)
+         read-only, to push achievement counts alongside the rest of the library. Bundles
+         native e_sqlite3.dll for both x86/x64 under runtimes/, auto-selected at load time by
+         SQLitePCLRaw - unlike Newtonsoft.Json above, this file name doesn't collide with
+         anything Playnite itself bundles, so Toolbox's pack step (which strips DLLs matching
+         Playnite's own file names) shouldn't touch it, but verify against a real .pext install
+         before trusting that. -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.20" />
   </ItemGroup>
 
   <ItemGroup>

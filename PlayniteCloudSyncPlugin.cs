@@ -150,16 +150,26 @@ namespace PlayniteCloudSync
                 progress.Text = "Pushing your library to the cloud...";
             }
 
+            var achievementCounts = settings.SyncAchievements
+                ? AchievementsReader.ReadCurrentUserCounts(PlayniteApi)
+                : new Dictionary<Guid, AchievementCounts>();
+
             var games = PlayniteApi.Database.Games
                 .Where(g => !g.Hidden)
-                .Select(g => new PushGame
+                .Select(g =>
                 {
-                    PlayniteId = g.Id.ToString(),
-                    Name = g.Name,
-                    Source = g.Source?.Name,
-                    InstallStatus = g.IsInstalled ? "Installed" : "Uninstalled",
-                    PlaytimeMinutes = (long)(g.Playtime / 60),
-                    LastPlayed = g.LastActivity?.ToUniversalTime().ToString("o")
+                    achievementCounts.TryGetValue(g.Id, out var achievements);
+                    return new PushGame
+                    {
+                        PlayniteId = g.Id.ToString(),
+                        Name = g.Name,
+                        Source = g.Source?.Name,
+                        InstallStatus = g.IsInstalled ? "Installed" : "Uninstalled",
+                        PlaytimeMinutes = (long)(g.Playtime / 60),
+                        LastPlayed = g.LastActivity?.ToUniversalTime().ToString("o"),
+                        AchievementsUnlocked = achievements.Total > 0 ? (int?)achievements.Unlocked : null,
+                        AchievementsTotal = achievements.Total > 0 ? (int?)achievements.Total : null
+                    };
                 })
                 .ToList();
 

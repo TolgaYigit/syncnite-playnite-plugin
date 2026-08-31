@@ -11,6 +11,7 @@ namespace PlayniteCloudSync
         private bool syncOnStartup = true;
         private bool autoSyncEnabled = true;
         private int autoSyncIntervalMinutes = 15;
+        private bool syncAchievements = true;
         private DateTime? lastSyncedAt;
         private DateTime? lastPulledAt;
 
@@ -42,6 +43,16 @@ namespace PlayniteCloudSync
         {
             get => autoSyncIntervalMinutes;
             set => SetField(ref autoSyncIntervalMinutes, value < 1 ? 1 : value);
+        }
+
+        // Whether to read achievement counts from the PlayniteAchievements plugin's local cache
+        // and include them in the push. Off by user choice, not just by absence: someone might
+        // have that plugin installed but not want its data leaving their PC, so this needs its
+        // own switch rather than only auto-detecting whether the plugin is present.
+        public bool SyncAchievements
+        {
+            get => syncAchievements;
+            set => SetField(ref syncAchievements, value);
         }
 
         public DateTime? LastSyncedAt
@@ -86,6 +97,7 @@ namespace PlayniteCloudSync
                 syncOnStartup = this.syncOnStartup,
                 autoSyncEnabled = this.autoSyncEnabled,
                 autoSyncIntervalMinutes = this.autoSyncIntervalMinutes,
+                syncAchievements = this.syncAchievements,
                 lastSyncedAt = this.lastSyncedAt,
                 lastPulledAt = this.lastPulledAt
             };
@@ -98,6 +110,7 @@ namespace PlayniteCloudSync
             SyncOnStartup = other.syncOnStartup;
             AutoSyncEnabled = other.autoSyncEnabled;
             AutoSyncIntervalMinutes = other.autoSyncIntervalMinutes;
+            SyncAchievements = other.syncAchievements;
             LastSyncedAt = other.lastSyncedAt;
             LastPulledAt = other.lastPulledAt;
         }

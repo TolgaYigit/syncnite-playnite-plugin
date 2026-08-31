@@ -30,6 +30,7 @@ namespace PlayniteCloudSync
         private readonly CheckBox startupSyncCheckBox;
         private readonly CheckBox autoSyncCheckBox;
         private readonly TextBox intervalBox;
+        private readonly CheckBox achievementsCheckBox;
         private readonly Button syncNowButton;
 
         public CloudSyncSettingsView(PlayniteCloudSyncPlugin plugin, CloudSyncSettingsViewModel viewModel)
@@ -139,6 +140,16 @@ namespace PlayniteCloudSync
             autoSyncRow.Children.Add(intervalBox);
             autoSyncRow.Children.Add(new TextBlock { Text = "minutes", VerticalAlignment = VerticalAlignment.Center });
             syncPanel.Children.Add(autoSyncRow);
+
+            achievementsCheckBox = new CheckBox
+            {
+                Content = "Include achievement counts (from the PlayniteAchievements plugin, if installed)",
+                IsChecked = viewModel.Settings.SyncAchievements,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            achievementsCheckBox.Checked += (s, e) => viewModel.Settings.SyncAchievements = true;
+            achievementsCheckBox.Unchecked += (s, e) => viewModel.Settings.SyncAchievements = false;
+            syncPanel.Children.Add(achievementsCheckBox);
 
             syncNowButton = new Button
             {
