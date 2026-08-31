@@ -41,5 +41,16 @@ namespace PlayniteCloudSync
             }
             return errors.Count == 0;
         }
+
+        // Background syncs save settings (LastSyncedAt) via a freshly-deserialized instance,
+        // separate from this long-lived, data-bound Settings object - pull those changes in.
+        public void RefreshFromDisk()
+        {
+            var saved = plugin.LoadPluginSettings<CloudSyncSettings>();
+            if (saved != null)
+            {
+                Settings.CopyFrom(saved);
+            }
+        }
     }
 }

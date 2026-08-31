@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -7,6 +8,9 @@ namespace PlayniteCloudSync
     {
         private string apiBaseUrl = "http://localhost:3000";
         private string deviceToken;
+        private bool autoSyncEnabled = true;
+        private int autoSyncIntervalMinutes = 15;
+        private DateTime? lastSyncedAt;
 
         public string ApiBaseUrl
         {
@@ -18,6 +22,24 @@ namespace PlayniteCloudSync
         {
             get => deviceToken;
             set => SetField(ref deviceToken, value);
+        }
+
+        public bool AutoSyncEnabled
+        {
+            get => autoSyncEnabled;
+            set => SetField(ref autoSyncEnabled, value);
+        }
+
+        public int AutoSyncIntervalMinutes
+        {
+            get => autoSyncIntervalMinutes;
+            set => SetField(ref autoSyncIntervalMinutes, value < 1 ? 1 : value);
+        }
+
+        public DateTime? LastSyncedAt
+        {
+            get => lastSyncedAt;
+            set => SetField(ref lastSyncedAt, value);
         }
 
         public bool IsConnected => !string.IsNullOrEmpty(DeviceToken);
@@ -44,7 +66,10 @@ namespace PlayniteCloudSync
             return new CloudSyncSettings
             {
                 apiBaseUrl = this.apiBaseUrl,
-                deviceToken = this.deviceToken
+                deviceToken = this.deviceToken,
+                autoSyncEnabled = this.autoSyncEnabled,
+                autoSyncIntervalMinutes = this.autoSyncIntervalMinutes,
+                lastSyncedAt = this.lastSyncedAt
             };
         }
 
@@ -52,6 +77,9 @@ namespace PlayniteCloudSync
         {
             ApiBaseUrl = other.apiBaseUrl;
             DeviceToken = other.deviceToken;
+            AutoSyncEnabled = other.autoSyncEnabled;
+            AutoSyncIntervalMinutes = other.autoSyncIntervalMinutes;
+            LastSyncedAt = other.lastSyncedAt;
         }
     }
 }

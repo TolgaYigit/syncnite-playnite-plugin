@@ -1,6 +1,9 @@
 using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using Playnite.SDK;
 
 namespace PlayniteCloudSync
@@ -9,83 +12,165 @@ namespace PlayniteCloudSync
     {
         private static readonly ILogger logger = LogManager.GetLogger();
 
+        private readonly PlayniteCloudSyncPlugin plugin;
         private readonly CloudSyncSettingsViewModel viewModel;
-        private readonly TextBox apiBaseUrlBox;
-        private readonly TextBox pairingCodeBox;
-        private readonly TextBlock statusText;
-        private readonly Button connectButton;
 
-        public CloudSyncSettingsView(CloudSyncSettingsViewModel viewModel)
+        private readonly Ellipse statusDot;
+        private readonly TextBlock statusText;
+        private readonly TextBlock lastSyncedText;
+        private readonly TextBlock errorText;
+
+        private readonly TextBox apiBaseUrlBox;
+        private readonly StackPanel pairingPanel;
+        private readonly TextBox pairingCodeBox;
+        private readonly Button connectButton;
+        private readonly Button disconnectButton;
+
+        private readonly StackPanel syncPanel;
+        private readonly CheckBox autoSyncCheckBox;
+        private readonly TextBox intervalBox;
+        private readonly Button syncNowButton;
+
+        public CloudSyncSettingsView(PlayniteCloudSyncPlugin plugin, CloudSyncSettingsViewModel viewModel)
         {
+            this.plugin = plugin;
             this.viewModel = viewModel;
 
-            var root = new StackPanel { Margin = new Thickness(4) };
+            var root = new StackPanel { Margin = new Thickness(4), Width = 420 };
 
-            root.Children.Add(new TextBlock
+            // --- Status header ---
+            var statusRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
+            statusDot = new Ellipse { Width = 10, Height = 10, Margin = new Thickness(0, 0, 8, 0) };
+            statusText = new TextBlock { FontWeight = FontWeights.Bold, FontSize = 14, VerticalAlignment = VerticalAlignment.Center };
+            statusRow.Children.Add(statusDot);
+            statusRow.Children.Add(statusText);
+            root.Children.Add(statusRow);
+
+            lastSyncedText = new TextBlock { Margin = new Thickness(18, 0, 0, 16), Opacity = 0.7, FontSize = 11 };
+            root.Children.Add(lastSyncedText);
+
+            errorText = new TextBlock
             {
-                Text = "API base URL",
-                Margin = new Thickness(0, 0, 0, 4)
-            });
-            apiBaseUrlBox = new TextBox
-            {
-                Text = viewModel.Settings.ApiBaseUrl,
-                Margin = new Thickness(0, 0, 0, 12)
+                Margin = new Thickness(0, 0, 0, 8),
+                Foreground = Brushes.OrangeRed,
+                TextWrapping = TextWrapping.Wrap,
+                Visibility = Visibility.Collapsed
             };
+            root.Children.Add(errorText);
+
+            // --- Connection section ---
+            root.Children.Add(SectionHeader("Connection"));
+
+            root.Children.Add(new TextBlock { Text = "API base URL", Margin = new Thickness(0, 0, 0, 2), Opacity = 0.8 });
+            apiBaseUrlBox = new TextBox { Text = viewModel.Settings.ApiBaseUrl, Margin = new Thickness(0, 0, 0, 10) };
             apiBaseUrlBox.TextChanged += (s, e) => viewModel.Settings.ApiBaseUrl = apiBaseUrlBox.Text;
             root.Children.Add(apiBaseUrlBox);
 
-            statusText = new TextBlock { Margin = new Thickness(0, 0, 0, 8) };
-            root.Children.Add(statusText);
-
-            var pairingRow = new DockPanel();
-            pairingCodeBox = new TextBox
-            {
-                Width = 140,
-                CharacterCasing = CharacterCasing.Upper,
-                MaxLength = 8
-            };
-            DockPanel.SetDock(pairingCodeBox, Dock.Left);
-            pairingRow.Children.Add(pairingCodeBox);
-
-            connectButton = new Button
-            {
-                Content = "Connect",
-                Margin = new Thickness(8, 0, 0, 0),
-                Padding = new Thickness(10, 2, 10, 2)
-            };
-            connectButton.Click += ConnectButton_Click;
-            pairingRow.Children.Add(connectButton);
-
-            root.Children.Add(new TextBlock
+            pairingPanel = new StackPanel();
+            pairingPanel.Children.Add(new TextBlock
             {
                 Text = "Pairing code (generate one on the web app's Settings page)",
-                Margin = new Thickness(0, 0, 0, 4)
+                Margin = new Thickness(0, 0, 0, 4),
+                Opacity = 0.8
             });
-            root.Children.Add(pairingRow);
+            var pairingRow = new DockPanel();
+            pairingCodeBox = new TextBox { Width = 140, CharacterCasing = CharacterCasing.Upper, MaxLength = 8 };
+            DockPanel.SetDock(pairingCodeBox, Dock.Left);
+            pairingRow.Children.Add(pairingCodeBox);
+            connectButton = new Button { Content = "Connect", Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2) };
+            connectButton.Click += ConnectButton_Click;
+            pairingRow.Children.Add(connectButton);
+            pairingPanel.Children.Add(pairingRow);
+            root.Children.Add(pairingPanel);
 
-            var disconnectButton = new Button
+            disconnectButton = new Button
             {
                 Content = "Disconnect",
-                Margin = new Thickness(0, 12, 0, 0),
+                Margin = new Thickness(0, 4, 0, 0),
                 Padding = new Thickness(10, 2, 10, 2),
                 HorizontalAlignment = HorizontalAlignment.Left
             };
             disconnectButton.Click += (s, e) =>
             {
                 viewModel.Settings.DeviceToken = null;
-                RefreshStatus();
+                Refresh();
             };
             root.Children.Add(disconnectButton);
 
+            // --- Sync section ---
+            syncPanel = new StackPanel { Margin = new Thickness(0, 16, 0, 0) };
+            syncPanel.Children.Add(SectionHeader("Sync"));
+
+            var autoSyncRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
+            autoSyncCheckBox = new CheckBox
+            {
+                Content = "Automatically sync every",
+                IsChecked = viewModel.Settings.AutoSyncEnabled,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            autoSyncCheckBox.Checked += (s, e) => viewModel.Settings.AutoSyncEnabled = true;
+            autoSyncCheckBox.Unchecked += (s, e) => viewModel.Settings.AutoSyncEnabled = false;
+            autoSyncRow.Children.Add(autoSyncCheckBox);
+
+            intervalBox = new TextBox
+            {
+                Width = 40,
+                Margin = new Thickness(8, 0, 4, 0),
+                Text = viewModel.Settings.AutoSyncIntervalMinutes.ToString(CultureInfo.InvariantCulture)
+            };
+            intervalBox.TextChanged += (s, e) =>
+            {
+                if (int.TryParse(intervalBox.Text, out var minutes))
+                {
+                    viewModel.Settings.AutoSyncIntervalMinutes = minutes;
+                }
+            };
+            autoSyncRow.Children.Add(intervalBox);
+            autoSyncRow.Children.Add(new TextBlock { Text = "minutes", VerticalAlignment = VerticalAlignment.Center });
+            syncPanel.Children.Add(autoSyncRow);
+
+            syncNowButton = new Button
+            {
+                Content = "Sync Now",
+                Padding = new Thickness(10, 2, 10, 2),
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            syncNowButton.Click += SyncNowButton_Click;
+            syncPanel.Children.Add(syncNowButton);
+
+            root.Children.Add(syncPanel);
+
             Content = root;
-            RefreshStatus();
+            Refresh();
         }
 
-        private void RefreshStatus()
+        private static TextBlock SectionHeader(string text)
         {
-            statusText.Text = viewModel.Settings.IsConnected
-                ? "Status: connected"
-                : "Status: not connected";
+            return new TextBlock
+            {
+                Text = text,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 8),
+                Opacity = 0.9
+            };
+        }
+
+        private void Refresh()
+        {
+            var connected = viewModel.Settings.IsConnected;
+
+            statusDot.Fill = connected ? Brushes.LimeGreen : Brushes.Gray;
+            statusText.Text = connected ? "Connected" : "Not connected";
+
+            lastSyncedText.Text = connected
+                ? viewModel.Settings.LastSyncedAt.HasValue
+                    ? "Last synced " + viewModel.Settings.LastSyncedAt.Value.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+                    : "Not synced yet"
+                : "";
+
+            pairingPanel.Visibility = connected ? Visibility.Collapsed : Visibility.Visible;
+            disconnectButton.Visibility = connected ? Visibility.Visible : Visibility.Collapsed;
+            syncPanel.Visibility = connected ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private async void ConnectButton_Click(object sender, RoutedEventArgs e)
@@ -97,6 +182,7 @@ namespace PlayniteCloudSync
             }
 
             connectButton.IsEnabled = false;
+            errorText.Visibility = Visibility.Collapsed;
             statusText.Text = "Connecting...";
 
             try
@@ -104,16 +190,40 @@ namespace PlayniteCloudSync
                 var client = new CloudSyncApiClient(apiBaseUrlBox.Text);
                 var token = await client.RedeemPairingCodeAsync(code);
                 viewModel.Settings.DeviceToken = token;
-                RefreshStatus();
+                Refresh();
             }
             catch (Exception ex)
             {
                 logger.Error(ex, "Playnite Cloud Sync: pairing failed.");
-                statusText.Text = "Connection failed: " + ex.Message;
+                errorText.Text = "Connection failed: " + ex.Message;
+                errorText.Visibility = Visibility.Visible;
+                Refresh();
             }
             finally
             {
                 connectButton.IsEnabled = true;
+            }
+        }
+
+        private async void SyncNowButton_Click(object sender, RoutedEventArgs e)
+        {
+            syncNowButton.IsEnabled = false;
+            errorText.Visibility = Visibility.Collapsed;
+
+            try
+            {
+                await plugin.SyncNowAsync();
+                Refresh();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Playnite Cloud Sync: manual sync from settings failed.");
+                errorText.Text = "Sync failed: " + ex.Message;
+                errorText.Visibility = Visibility.Visible;
+            }
+            finally
+            {
+                syncNowButton.IsEnabled = true;
             }
         }
     }
