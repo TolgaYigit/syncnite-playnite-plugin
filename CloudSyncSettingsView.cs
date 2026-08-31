@@ -205,7 +205,7 @@ namespace PlayniteCloudSync
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Playnite Cloud Sync: pairing failed.");
+                logger.Error(ex, "Syncnite: pairing failed.");
                 errorText.Text = "Connection failed: " + ex.Message;
                 errorText.Visibility = Visibility.Visible;
                 Refresh();
@@ -229,7 +229,7 @@ namespace PlayniteCloudSync
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Playnite Cloud Sync: manual sync from settings failed.");
+                logger.Error(ex, "Syncnite: manual sync from settings failed.");
                 errorText.Text = "Sync failed: " + ex.Message;
                 errorText.Visibility = Visibility.Visible;
             }

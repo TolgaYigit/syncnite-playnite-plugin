@@ -42,7 +42,7 @@ namespace PlayniteCloudSync
             yield return new MainMenuItem
             {
                 Description = "Sync Now",
-                MenuSection = "@Cloud Sync",
+                MenuSection = "@Syncnite",
                 Action = _ => SyncNowWithProgress()
             };
         }
@@ -104,7 +104,7 @@ namespace PlayniteCloudSync
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, $"Playnite Cloud Sync: sync failed ({reason}).");
+                    logger.Error(ex, $"Syncnite: sync failed ({reason}).");
                 }
             });
         }
@@ -124,8 +124,8 @@ namespace PlayniteCloudSync
 
             if (result.Error != null)
             {
-                logger.Error(result.Error, "Playnite Cloud Sync: manual sync failed.");
-                PlayniteApi.Dialogs.ShowErrorMessage(result.Error.Message, "Cloud Sync failed");
+                logger.Error(result.Error, "Syncnite: manual sync failed.");
+                PlayniteApi.Dialogs.ShowErrorMessage(result.Error.Message, "Syncnite sync failed");
             }
         }
 
@@ -137,7 +137,7 @@ namespace PlayniteCloudSync
             var settings = LoadPluginSettings<CloudSyncSettings>();
             if (settings == null || !settings.IsConnected)
             {
-                logger.Debug("Playnite Cloud Sync: not connected, skipping sync.");
+                logger.Debug("Syncnite: not connected, skipping sync.");
                 return;
             }
 
@@ -164,7 +164,7 @@ namespace PlayniteCloudSync
                 .ToList();
 
             var pushedCount = await client.PushGamesAsync(games, ct);
-            logger.Info($"Playnite Cloud Sync: pushed {pushedCount} games.");
+            logger.Info($"Syncnite: pushed {pushedCount} games.");
             settings.LastSyncedAt = DateTime.UtcNow;
 
             if (progress != null)
@@ -173,7 +173,7 @@ namespace PlayniteCloudSync
             }
 
             var pulledCount = await PullFromCloudAsync(settings, client, progress, ct);
-            logger.Info($"Playnite Cloud Sync: applied {pulledCount} edits from the web.");
+            logger.Info($"Syncnite: applied {pulledCount} edits from the web.");
 
             SavePluginSettings(settings);
             settingsViewModel.RefreshFromDisk();
@@ -202,7 +202,7 @@ namespace PlayniteCloudSync
 
                 if (!Guid.TryParse(pulled.PlayniteId, out var gameId))
                 {
-                    logger.Warn($"Playnite Cloud Sync: could not parse playnite_id '{pulled.PlayniteId}' as a Guid.");
+                    logger.Warn($"Syncnite: could not parse playnite_id '{pulled.PlayniteId}' as a Guid.");
                     continue;
                 }
 
