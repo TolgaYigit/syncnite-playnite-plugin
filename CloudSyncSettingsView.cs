@@ -27,6 +27,7 @@ namespace PlayniteCloudSync
         private readonly Button disconnectButton;
 
         private readonly StackPanel syncPanel;
+        private readonly CheckBox startupSyncCheckBox;
         private readonly CheckBox autoSyncCheckBox;
         private readonly TextBox intervalBox;
         private readonly Button syncNowButton;
@@ -100,6 +101,16 @@ namespace PlayniteCloudSync
             // --- Sync section ---
             syncPanel = new StackPanel { Margin = new Thickness(0, 16, 0, 0) };
             syncPanel.Children.Add(SectionHeader("Sync"));
+
+            startupSyncCheckBox = new CheckBox
+            {
+                Content = "Sync automatically when Playnite starts",
+                IsChecked = viewModel.Settings.SyncOnStartup,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            startupSyncCheckBox.Checked += (s, e) => viewModel.Settings.SyncOnStartup = true;
+            startupSyncCheckBox.Unchecked += (s, e) => viewModel.Settings.SyncOnStartup = false;
+            syncPanel.Children.Add(startupSyncCheckBox);
 
             var autoSyncRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
             autoSyncCheckBox = new CheckBox
@@ -205,14 +216,15 @@ namespace PlayniteCloudSync
             }
         }
 
-        private async void SyncNowButton_Click(object sender, RoutedEventArgs e)
+        private void SyncNowButton_Click(object sender, RoutedEventArgs e)
         {
             syncNowButton.IsEnabled = false;
             errorText.Visibility = Visibility.Collapsed;
 
             try
             {
-                await plugin.SyncNowAsync();
+                // Shows the same progress dialog as the main menu's "Sync Now".
+                plugin.SyncNowWithProgress();
                 Refresh();
             }
             catch (Exception ex)

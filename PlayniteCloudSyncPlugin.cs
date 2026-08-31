@@ -43,13 +43,18 @@ namespace PlayniteCloudSync
             {
                 Description = "Sync Now",
                 MenuSection = "@Cloud Sync",
-                Action = _ => FireAndForgetSync("manual sync")
+                Action = _ => SyncNowWithProgress()
             };
         }
 
         public override void OnApplicationStarted(OnApplicationStartedEventArgs args)
         {
-            FireAndForgetSync("startup");
+            var settings = LoadPluginSettings<CloudSyncSettings>();
+            if (settings != null && settings.IsConnected && settings.SyncOnStartup)
+            {
+                FireAndForgetSync("startup");
+            }
+
             autoSyncTimer = new Timer(
                 _ => CheckAutoSync(),
                 null,
@@ -86,6 +91,9 @@ namespace PlayniteCloudSync
             }
         }
 
+        // Silent path for background triggers (startup, library changes, the auto-sync timer) -
+        // no progress dialog, since popping one unprompted every time the library changes or
+        // every N minutes would be disruptive rather than helpful.
         private void FireAndForgetSync(string reason)
         {
             Task.Run(async () =>
@@ -101,19 +109,46 @@ namespace PlayniteCloudSync
             });
         }
 
+        // User-initiated path (the "Sync Now" menu item) - shows the same kind of progress
+        // dialog Playnite uses for its own library updates, and lets the user cancel.
+        public void SyncNowWithProgress()
+        {
+            var progressOptions = new GlobalProgressOptions("Syncing with cloud...", true)
+            {
+                IsIndeterminate = true
+            };
+
+            var result = PlayniteApi.Dialogs.ActivateGlobalProgress(
+                args => SyncNowAsync(args),
+                progressOptions);
+
+            if (result.Error != null)
+            {
+                logger.Error(result.Error, "Playnite Cloud Sync: manual sync failed.");
+                PlayniteApi.Dialogs.ShowErrorMessage(result.Error.Message, "Cloud Sync failed");
+            }
+        }
+
         /// Pushes the current library, then pulls down any edits made on the web since the
         /// last pull. Throws on failure (callers driving UI need the error); background
         /// triggers go through FireAndForgetSync, which catches and logs instead.
-        public async Task<int> SyncNowAsync()
+        public async Task SyncNowAsync(GlobalProgressActionArgs progress = null)
         {
             var settings = LoadPluginSettings<CloudSyncSettings>();
             if (settings == null || !settings.IsConnected)
             {
                 logger.Debug("Playnite Cloud Sync: not connected, skipping sync.");
-                return 0;
+                return;
             }
 
+            var ct = progress?.CancelToken ?? CancellationToken.None;
             var client = new CloudSyncApiClient(settings.ApiBaseUrl, settings.DeviceToken);
+
+            if (progress != null)
+            {
+                progress.IsIndeterminate = true;
+                progress.Text = "Pushing your library to the cloud...";
+            }
 
             var games = PlayniteApi.Database.Games
                 .Where(g => !g.Hidden)
@@ -128,25 +163,43 @@ namespace PlayniteCloudSync
                 })
                 .ToList();
 
-            var pushedCount = await client.PushGamesAsync(games);
+            var pushedCount = await client.PushGamesAsync(games, ct);
             logger.Info($"Playnite Cloud Sync: pushed {pushedCount} games.");
             settings.LastSyncedAt = DateTime.UtcNow;
 
-            var pulledCount = await PullFromCloudAsync(settings, client);
+            if (progress != null)
+            {
+                progress.Text = "Checking for changes made on the web...";
+            }
+
+            var pulledCount = await PullFromCloudAsync(settings, client, progress, ct);
             logger.Info($"Playnite Cloud Sync: applied {pulledCount} edits from the web.");
 
             SavePluginSettings(settings);
             settingsViewModel.RefreshFromDisk();
-            return pushedCount;
         }
 
-        private async Task<int> PullFromCloudAsync(CloudSyncSettings settings, CloudSyncApiClient client)
+        private async Task<int> PullFromCloudAsync(
+            CloudSyncSettings settings,
+            CloudSyncApiClient client,
+            GlobalProgressActionArgs progress,
+            CancellationToken ct)
         {
-            var result = await client.PullGamesAsync(settings.LastPulledAt);
+            var result = await client.PullGamesAsync(settings.LastPulledAt, ct);
+            var pulledGames = result.Games ?? new List<PullGame>();
             var applied = 0;
 
-            foreach (var pulled in result.Games ?? new List<PullGame>())
+            if (progress != null && pulledGames.Count > 0)
             {
+                progress.IsIndeterminate = false;
+                progress.ProgressMaxValue = pulledGames.Count;
+                progress.CurrentProgressValue = 0;
+            }
+
+            foreach (var pulled in pulledGames)
+            {
+                ct.ThrowIfCancellationRequested();
+
                 if (!Guid.TryParse(pulled.PlayniteId, out var gameId))
                 {
                     logger.Warn($"Playnite Cloud Sync: could not parse playnite_id '{pulled.PlayniteId}' as a Guid.");
@@ -159,6 +212,11 @@ namespace PlayniteCloudSync
                     // Game no longer exists in this PC's library (removed, or belongs to a
                     // different device's copy of the same title) - nothing to apply it to.
                     continue;
+                }
+
+                if (progress != null)
+                {
+                    progress.Text = $"Applying web changes to {game.Name}...";
                 }
 
                 game.Notes = pulled.Notes;
@@ -176,6 +234,11 @@ namespace PlayniteCloudSync
 
                 PlayniteApi.Database.Games.Update(game);
                 applied++;
+
+                if (progress != null)
+                {
+                    progress.CurrentProgressValue = applied;
+                }
             }
 
             if (!string.IsNullOrEmpty(result.ServerTime) &&

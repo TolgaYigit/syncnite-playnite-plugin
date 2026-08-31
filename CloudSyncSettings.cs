@@ -8,6 +8,7 @@ namespace PlayniteCloudSync
     {
         private string apiBaseUrl = "http://localhost:3000";
         private string deviceToken;
+        private bool syncOnStartup = true;
         private bool autoSyncEnabled = true;
         private int autoSyncIntervalMinutes = 15;
         private DateTime? lastSyncedAt;
@@ -23,6 +24,12 @@ namespace PlayniteCloudSync
         {
             get => deviceToken;
             set => SetField(ref deviceToken, value);
+        }
+
+        public bool SyncOnStartup
+        {
+            get => syncOnStartup;
+            set => SetField(ref syncOnStartup, value);
         }
 
         public bool AutoSyncEnabled
@@ -76,6 +83,7 @@ namespace PlayniteCloudSync
             {
                 apiBaseUrl = this.apiBaseUrl,
                 deviceToken = this.deviceToken,
+                syncOnStartup = this.syncOnStartup,
                 autoSyncEnabled = this.autoSyncEnabled,
                 autoSyncIntervalMinutes = this.autoSyncIntervalMinutes,
                 lastSyncedAt = this.lastSyncedAt,
@@ -87,6 +95,7 @@ namespace PlayniteCloudSync
         {
             ApiBaseUrl = other.apiBaseUrl;
             DeviceToken = other.deviceToken;
+            SyncOnStartup = other.syncOnStartup;
             AutoSyncEnabled = other.autoSyncEnabled;
             AutoSyncIntervalMinutes = other.autoSyncIntervalMinutes;
             LastSyncedAt = other.lastSyncedAt;

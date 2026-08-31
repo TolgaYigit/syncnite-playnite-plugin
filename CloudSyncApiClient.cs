@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -90,7 +91,7 @@ namespace PlayniteCloudSync
             }
         }
 
-        public async Task<int> PushGamesAsync(IEnumerable<PushGame> games)
+        public async Task<int> PushGamesAsync(IEnumerable<PushGame> games, CancellationToken ct = default(CancellationToken))
         {
             var payload = JsonConvert.SerializeObject(new { games });
             using (var request = new HttpRequestMessage(HttpMethod.Post, apiBaseUrl + "/api/sync/push"))
@@ -99,7 +100,7 @@ namespace PlayniteCloudSync
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", deviceToken);
                 request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-                using (var response = await http.SendAsync(request))
+                using (var response = await http.SendAsync(request, ct))
                 {
                     var body = await response.Content.ReadAsStringAsync();
                     if (!response.IsSuccessStatusCode)
@@ -113,7 +114,7 @@ namespace PlayniteCloudSync
             }
         }
 
-        public async Task<PullResult> PullGamesAsync(DateTime? since)
+        public async Task<PullResult> PullGamesAsync(DateTime? since, CancellationToken ct = default(CancellationToken))
         {
             var url = apiBaseUrl + "/api/sync/pull";
             if (since.HasValue)
@@ -126,7 +127,7 @@ namespace PlayniteCloudSync
                 request.Headers.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", deviceToken);
 
-                using (var response = await http.SendAsync(request))
+                using (var response = await http.SendAsync(request, ct))
                 {
                     var body = await response.Content.ReadAsStringAsync();
                     if (!response.IsSuccessStatusCode)
