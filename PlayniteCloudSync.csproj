@@ -13,10 +13,21 @@
     <!-- Lets `dotnet build` compile a net462 target without a full Visual Studio / Framework install. -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageReference Include="PlayniteSDK" Version="6.11.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="extension.yaml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Settings UI is built in plain C# (no .xaml file), so these framework references are
+         enough - no need for the WindowsDesktop SDK / XAML markup compiler. -->
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 
 </Project>
