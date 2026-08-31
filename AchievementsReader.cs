@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Data.Sqlite;
 using Playnite.SDK;
 
@@ -25,6 +26,26 @@ namespace PlayniteCloudSync
         private const string PlayniteAchievementsPluginId = "e6aad2c9-6e06-4d8d-ac55-ac3b252b5f7b";
 
         private static readonly ILogger logger = LogManager.GetLogger();
+
+        // Installed = Playnite knows about the addon at all (its files are on disk), regardless
+        // of enabled/disabled state. Used to decide whether to even offer the "include
+        // achievements" setting, or point the user at installing it instead.
+        public static bool IsSupportedPluginInstalled(IPlayniteAPI playniteApi)
+        {
+            var addons = playniteApi?.Addons?.Addons;
+            return addons != null && addons.Contains(PlayniteAchievementsPluginId, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static bool IsSupportedPluginEnabled(IPlayniteAPI playniteApi)
+        {
+            if (!IsSupportedPluginInstalled(playniteApi))
+            {
+                return false;
+            }
+
+            var disabled = playniteApi?.Addons?.DisabledAddons;
+            return disabled == null || !disabled.Contains(PlayniteAchievementsPluginId, StringComparer.OrdinalIgnoreCase);
+        }
 
         public static Dictionary<Guid, AchievementCounts> ReadCurrentUserCounts(IPlayniteAPI playniteApi)
         {

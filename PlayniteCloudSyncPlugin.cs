@@ -150,7 +150,9 @@ namespace PlayniteCloudSync
                 progress.Text = "Pushing your library to the cloud...";
             }
 
-            var achievementCounts = settings.SyncAchievements
+            // Also require the companion plugin to be enabled right now, not just installed -
+            // otherwise a stale cache from before someone disabled it would keep getting pushed.
+            var achievementCounts = settings.SyncAchievements && AchievementsReader.IsSupportedPluginEnabled(PlayniteApi)
                 ? AchievementsReader.ReadCurrentUserCounts(PlayniteApi)
                 : new Dictionary<Guid, AchievementCounts>();
 

@@ -31,6 +31,7 @@ namespace PlayniteCloudSync
         private readonly CheckBox autoSyncCheckBox;
         private readonly TextBox intervalBox;
         private readonly CheckBox achievementsCheckBox;
+        private readonly TextBlock achievementsStatusText;
         private readonly Button syncNowButton;
 
         public CloudSyncSettingsView(PlayniteCloudSyncPlugin plugin, CloudSyncSettingsViewModel viewModel)
@@ -143,13 +144,22 @@ namespace PlayniteCloudSync
 
             achievementsCheckBox = new CheckBox
             {
-                Content = "Include achievement counts (from the PlayniteAchievements plugin, if installed)",
+                Content = new TextBlock { Text = "Include achievement counts", TextWrapping = TextWrapping.Wrap },
                 IsChecked = viewModel.Settings.SyncAchievements,
-                Margin = new Thickness(0, 0, 0, 10)
+                Margin = new Thickness(0, 0, 0, 2)
             };
             achievementsCheckBox.Checked += (s, e) => viewModel.Settings.SyncAchievements = true;
             achievementsCheckBox.Unchecked += (s, e) => viewModel.Settings.SyncAchievements = false;
             syncPanel.Children.Add(achievementsCheckBox);
+
+            achievementsStatusText = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                FontSize = 11,
+                Opacity = 0.7,
+                Margin = new Thickness(18, 0, 0, 10)
+            };
+            syncPanel.Children.Add(achievementsStatusText);
 
             syncNowButton = new Button
             {
@@ -193,6 +203,26 @@ namespace PlayniteCloudSync
             pairingPanel.Visibility = connected ? Visibility.Collapsed : Visibility.Visible;
             disconnectButton.Visibility = connected ? Visibility.Visible : Visibility.Collapsed;
             syncPanel.Visibility = connected ? Visibility.Visible : Visibility.Collapsed;
+
+            var installed = AchievementsReader.IsSupportedPluginInstalled(plugin.PlayniteApi);
+            var enabled = AchievementsReader.IsSupportedPluginEnabled(plugin.PlayniteApi);
+
+            achievementsCheckBox.IsEnabled = enabled;
+            if (!installed)
+            {
+                achievementsStatusText.Text =
+                    "PlayniteAchievements isn't installed - add it from Playnite's Add-ons browser " +
+                    "(Add-ons → Browse → search \"Playnite Achievements\") if you want achievement counts synced.";
+            }
+            else if (!enabled)
+            {
+                achievementsStatusText.Text =
+                    "PlayniteAchievements is installed but disabled - enable it under Add-ons to sync achievement counts.";
+            }
+            else
+            {
+                achievementsStatusText.Text = "Detected: PlayniteAchievements is installed and enabled.";
+            }
         }
 
         private async void ConnectButton_Click(object sender, RoutedEventArgs e)
