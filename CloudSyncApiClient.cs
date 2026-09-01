@@ -36,6 +36,30 @@ namespace PlayniteCloudSync
 
         [JsonProperty("achievements_total")]
         public int? AchievementsTotal { get; set; }
+
+        // Web-owned fields (see docs/sync-protocol.md) - sent along too, but only ever applied
+        // server-side to seed a game that the web has never touched (web_updated_at still
+        // null). Lets a freshly-paired PC's existing Playnite organization (tags, completion
+        // status, etc, already tracked locally for years in some libraries) show up on first
+        // sync instead of starting blank; the instant a web edit happens these fields flip to
+        // being genuinely web-owned and the plugin's own values here are ignored from then on.
+        [JsonProperty("local_tags")]
+        public List<string> LocalTags { get; set; }
+
+        [JsonProperty("local_categories")]
+        public List<string> LocalCategories { get; set; }
+
+        [JsonProperty("local_notes")]
+        public string LocalNotes { get; set; }
+
+        [JsonProperty("local_completion_status")]
+        public string LocalCompletionStatus { get; set; }
+
+        [JsonProperty("local_favorite")]
+        public bool LocalFavorite { get; set; }
+
+        [JsonProperty("local_hidden")]
+        public bool LocalHidden { get; set; }
     }
 
     public class PullGame

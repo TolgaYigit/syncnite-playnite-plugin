@@ -171,7 +171,21 @@ namespace PlayniteCloudSync
                         PlaytimeMinutes = (long)(g.Playtime / 60),
                         LastPlayed = g.LastActivity?.ToUniversalTime().ToString("o"),
                         AchievementsUnlocked = achievements.Total > 0 ? (int?)achievements.Unlocked : null,
-                        AchievementsTotal = achievements.Total > 0 ? (int?)achievements.Total : null
+                        AchievementsTotal = achievements.Total > 0 ? (int?)achievements.Total : null,
+                        LocalTags = (g.TagIds ?? new List<Guid>())
+                            .Select(id => PlayniteApi.Database.Tags.Get(id)?.Name)
+                            .Where(name => name != null)
+                            .ToList(),
+                        LocalCategories = (g.CategoryIds ?? new List<Guid>())
+                            .Select(id => PlayniteApi.Database.Categories.Get(id)?.Name)
+                            .Where(name => name != null)
+                            .ToList(),
+                        LocalNotes = g.Notes,
+                        LocalCompletionStatus = g.CompletionStatusId != Guid.Empty
+                            ? PlayniteApi.Database.CompletionStatuses.Get(g.CompletionStatusId)?.Name
+                            : null,
+                        LocalFavorite = g.Favorite,
+                        LocalHidden = g.Hidden
                     };
                 })
                 .ToList();
