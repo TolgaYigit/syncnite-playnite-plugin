@@ -31,6 +31,9 @@ namespace PlayniteCloudSync
         [JsonProperty("last_played")]
         public string LastPlayed { get; set; }
 
+        [JsonProperty("date_added")]
+        public string DateAdded { get; set; }
+
         [JsonProperty("achievements_unlocked")]
         public int? AchievementsUnlocked { get; set; }
 

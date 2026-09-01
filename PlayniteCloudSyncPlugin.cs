@@ -196,6 +196,7 @@ namespace PlayniteCloudSync
                         InstallStatus = g.IsInstalled ? "Installed" : "Uninstalled",
                         PlaytimeMinutes = (long)(g.Playtime / 60),
                         LastPlayed = g.LastActivity?.ToUniversalTime().ToString("o"),
+                        DateAdded = g.Added?.ToUniversalTime().ToString("o"),
                         AchievementsUnlocked = achievements.Total > 0 ? (int?)achievements.Unlocked : null,
                         AchievementsTotal = achievements.Total > 0 ? (int?)achievements.Total : null,
                         LocalTags = (g.TagIds ?? new List<Guid>())
