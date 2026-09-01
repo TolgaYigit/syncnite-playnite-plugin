@@ -6,7 +6,7 @@ namespace PlayniteCloudSync
 {
     public class CloudSyncSettings : INotifyPropertyChanged
     {
-        private string apiBaseUrl = "https://web-eight-delta-33.vercel.app";
+        private string apiBaseUrl = "https://syncnite.vercel.app";
         private string deviceToken;
         private bool syncOnStartup = true;
         private bool autoSyncEnabled = true;
