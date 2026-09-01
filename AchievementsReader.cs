@@ -21,9 +21,20 @@ namespace PlayniteCloudSync
     // whole push.
     public static class AchievementsReader
     {
-        // PlayniteAchievements' own plugin GUID (source/PlayniteAchievementsPlugin.cs) - its
-        // ExtensionsData folder is named after this, same as ours is named after our own Id.
-        private const string PlayniteAchievementsPluginId = "e6aad2c9-6e06-4d8d-ac55-ac3b252b5f7b";
+        // Two different identifiers, easy to conflate but not interchangeable - verified live
+        // against a real install with PlayniteAchievements 3.0.0. Addons.Addons/DisabledAddons
+        // are keyed by the addon's *catalog manifest* Id (extension.yaml's `Id:` field), which
+        // for anything distributed through Playnite's official Add-ons browser is a
+        // human-readable slug, not a GUID - PlayniteAchievements' own extension.yaml declares
+        // `Id: PlayniteAchievements`. The GUID below is a separate thing: the plugin class's own
+        // compiled Guid Id (every Plugin subclass has one, ours included), which is what Playnite
+        // actually names the per-addon ExtensionsData folder after - confirmed by finding
+        // achievement_cache.db live under ExtensionsData\e6aad2c9-.... Using the GUID for the
+        // installed/enabled check (the original bug here) meant it never matched the manifest Id
+        // Addons.Addons actually contains, so the "include achievements" setting stayed grayed
+        // out even with the addon genuinely installed and enabled.
+        private const string PlayniteAchievementsManifestId = "PlayniteAchievements";
+        private const string PlayniteAchievementsDataFolderId = "e6aad2c9-6e06-4d8d-ac55-ac3b252b5f7b";
 
         private static readonly ILogger logger = LogManager.GetLogger();
 
@@ -33,7 +44,7 @@ namespace PlayniteCloudSync
         public static bool IsSupportedPluginInstalled(IPlayniteAPI playniteApi)
         {
             var addons = playniteApi?.Addons?.Addons;
-            return addons != null && addons.Contains(PlayniteAchievementsPluginId, StringComparer.OrdinalIgnoreCase);
+            return addons != null && addons.Contains(PlayniteAchievementsManifestId, StringComparer.OrdinalIgnoreCase);
         }
 
         public static bool IsSupportedPluginEnabled(IPlayniteAPI playniteApi)
@@ -44,7 +55,7 @@ namespace PlayniteCloudSync
             }
 
             var disabled = playniteApi?.Addons?.DisabledAddons;
-            return disabled == null || !disabled.Contains(PlayniteAchievementsPluginId, StringComparer.OrdinalIgnoreCase);
+            return disabled == null || !disabled.Contains(PlayniteAchievementsManifestId, StringComparer.OrdinalIgnoreCase);
         }
 
         public static Dictionary<Guid, AchievementCounts> ReadCurrentUserCounts(IPlayniteAPI playniteApi)
@@ -55,7 +66,7 @@ namespace PlayniteCloudSync
             {
                 var dbPath = Path.Combine(
                     playniteApi.Paths.ExtensionsDataPath,
-                    PlayniteAchievementsPluginId,
+                    PlayniteAchievementsDataFolderId,
                     "achievement_cache.db");
 
                 if (!File.Exists(dbPath))

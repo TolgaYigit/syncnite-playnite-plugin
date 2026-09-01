@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using Playnite.SDK;
 using Playnite.SDK.Events;
@@ -44,6 +45,25 @@ namespace PlayniteCloudSync
                 Description = "Sync Now",
                 MenuSection = "@Syncnite",
                 Action = _ => SyncNowWithProgress()
+            };
+        }
+
+        // A single always-visible button next to Playnite's own top-bar icons (filter, view
+        // toggle, etc) - one click straight to a sync, no menu to open first like the main-menu
+        // item above (kept as-is for discoverability/muscle memory - both call the same code).
+        public override IEnumerable<TopPanelItem> GetTopPanelItems()
+        {
+            yield return new TopPanelItem
+            {
+                Icon = new TextBlock
+                {
+                    Text = "↻",
+                    FontSize = 20,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                },
+                Title = "Sync with Syncnite",
+                Activated = () => SyncNowWithProgress()
             };
         }
 
