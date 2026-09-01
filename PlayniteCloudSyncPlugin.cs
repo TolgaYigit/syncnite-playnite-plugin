@@ -176,8 +176,14 @@ namespace PlayniteCloudSync
                 ? AchievementsReader.ReadCurrentUserCounts(PlayniteApi)
                 : new Dictionary<Guid, AchievementCounts>();
 
+            // Previously skipped Hidden games entirely, which meant anything hidden by a
+            // duplicate-management plugin (e.g. Duplicate Hider, which hides all but one
+            // Playnite entry for the same title owned on multiple sources) never reached the
+            // cloud at all - there was nothing for the game detail page's "Also owned on"
+            // switcher to find. Now pushes everything; LocalHidden below still seeds this app's
+            // own (web-owned, filterable via "Show hidden") hidden field the same way it always
+            // has, so default library browsing is unaffected.
             var games = PlayniteApi.Database.Games
-                .Where(g => !g.Hidden)
                 .Select(g =>
                 {
                     achievementCounts.TryGetValue(g.Id, out var achievements);
