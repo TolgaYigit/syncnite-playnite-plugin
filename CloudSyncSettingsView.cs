@@ -95,7 +95,7 @@ namespace PlayniteCloudSync
             };
             disconnectButton.Click += (s, e) =>
             {
-                viewModel.Settings.DeviceToken = null;
+                viewModel.SetDeviceToken(null);
                 Refresh();
             };
             root.Children.Add(disconnectButton);
@@ -256,7 +256,7 @@ namespace PlayniteCloudSync
             {
                 var client = new CloudSyncApiClient(apiBaseUrlBox.Text);
                 var token = await client.RedeemPairingCodeAsync(code);
-                viewModel.Settings.DeviceToken = token;
+                viewModel.SetDeviceToken(token);
                 Refresh();
             }
             catch (Exception ex)

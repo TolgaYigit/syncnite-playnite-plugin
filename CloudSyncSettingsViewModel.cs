@@ -32,6 +32,19 @@ namespace PlayniteCloudSync
             plugin.SavePluginSettings(Settings);
         }
 
+        // Pairing/unpairing needs to survive the settings window closing any way other than its
+        // own Save button (the X button, Alt+F4, clicking elsewhere) - EndEdit() above only runs
+        // on an explicit Save, so a token set via BeginEdit's edit session alone could silently
+        // never reach disk. Persist it immediately, and refresh the CancelEdit snapshot so a
+        // later Cancel (e.g. after also tweaking the API URL) can't revert a pairing change that
+        // already made it to disk and back it out from under a user who thinks they're connected.
+        public void SetDeviceToken(string token)
+        {
+            Settings.DeviceToken = token;
+            plugin.SavePluginSettings(Settings);
+            editingClone = Settings.Clone();
+        }
+
         public bool VerifySettings(out List<string> errors)
         {
             errors = new List<string>();
