@@ -17,6 +17,13 @@ namespace PlayniteCloudSync
         private static readonly ILogger logger = LogManager.GetLogger();
         private static readonly TimeSpan AutoSyncCheckInterval = TimeSpan.FromMinutes(1);
 
+        // Reported to the web app on every push so it can flag an out-of-date install (see
+        // Settings' "Connected devices" and the notification bell). Keep this in sync by hand
+        // with extension.yaml's own Version field and web/src/lib/versions.ts's
+        // LATEST_PLUGIN_VERSION whenever this is bumped - Playnite's plugin loader doesn't
+        // expose a way to read a plugin's own manifest version back from inside itself.
+        public const string PluginVersion = "0.2.0";
+
         private readonly CloudSyncSettingsViewModel settingsViewModel;
         private Timer autoSyncTimer;
 
@@ -217,7 +224,7 @@ namespace PlayniteCloudSync
                 })
                 .ToList();
 
-            var pushedCount = await client.PushGamesAsync(games, ct);
+            var pushedCount = await client.PushGamesAsync(games, PluginVersion, ct);
             logger.Info($"Syncnite: pushed {pushedCount} games.");
             settings.LastSyncedAt = DateTime.UtcNow;
 

@@ -127,9 +127,9 @@ namespace PlayniteCloudSync
             }
         }
 
-        public async Task<int> PushGamesAsync(IEnumerable<PushGame> games, CancellationToken ct = default(CancellationToken))
+        public async Task<int> PushGamesAsync(IEnumerable<PushGame> games, string pluginVersion, CancellationToken ct = default(CancellationToken))
         {
-            var payload = JsonConvert.SerializeObject(new { games });
+            var payload = JsonConvert.SerializeObject(new { games, plugin_version = pluginVersion });
             using (var request = new HttpRequestMessage(HttpMethod.Post, apiBaseUrl + "/api/sync/push"))
             {
                 request.Headers.Authorization =
