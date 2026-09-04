@@ -66,3 +66,7 @@ Discussions for ideas and questions. That repo covers the whole project, not jus
 
 Built with the help of [Claude Code](https://claude.com/claude-code) (Anthropic's AI coding
 assistant).
+
+## License
+
+[MIT](LICENSE) © Tolga Yigit
