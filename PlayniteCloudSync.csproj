@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <None Include="extension.yaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="pluginicon.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
