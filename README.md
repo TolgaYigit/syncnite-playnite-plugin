@@ -1,6 +1,6 @@
 # Syncnite
 
-The [Playnite](https://playnite.link) plugin for [Syncnite](https://syncnite.vercel.app) — it
+The [Playnite](https://playnite.link) plugin for [Syncnite](https://syncnite.com) — it
 mirrors your Playnite library to the cloud so you can browse, tag, and organize it from any
 browser, with edits syncing straight back to Playnite on your PC.
 
@@ -37,7 +37,7 @@ hidden games, not because of any direct integration between the two.
 Grab the latest `.pext` from [Releases](../../releases) and drag it onto a running Playnite
 window (or double-click it). Then, in Playnite:
 
-1. Create a free account at [syncnite.vercel.app](https://syncnite.vercel.app) if you don't
+1. Create a free account at [syncnite.com](https://syncnite.com) if you don't
    have one.
 2. On the web, go to Settings and click **Generate pairing code**.
 3. In Playnite, go to **Add-ons → Extension Settings → Syncnite**, paste the code in, and
