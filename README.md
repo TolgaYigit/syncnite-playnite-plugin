@@ -4,9 +4,10 @@ The [Playnite](https://playnite.link) plugin for [Syncnite](https://syncnite.ver
 mirrors your Playnite library to the cloud so you can browse, tag, and organize it from any
 browser, with edits syncing straight back to Playnite on your PC.
 
-This repo is the plugin only. The web app and backend are a separate, private project — this
-side has no secrets of its own (no API keys, no credentials), which is why it can live here in
-the open.
+## Requirements
+
+- Playnite, with a plugin built against [PlayniteSDK](https://api.playnite.link/) 6.11.0
+- .NET Framework 4.6.2 (matches Playnite's own runtime — nothing extra to install)
 
 ## What it does
 
@@ -46,8 +47,7 @@ window (or double-click it). Then, in Playnite:
 
 ## Building from source
 
-Requires .NET Framework 4.6.2 and a local Playnite install (for `Toolbox.exe`, used to package
-the `.pext`).
+Also needs a local Playnite install, for `Toolbox.exe`, used to package the `.pext`.
 
 ```powershell
 ./pack.ps1
