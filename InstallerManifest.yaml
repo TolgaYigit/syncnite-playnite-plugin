@@ -1,9 +1,11 @@
 AddonId: Syncnite
 Packages:
-  - Version: 0.3.0
+  - Version: 0.3.1
     RequiredApiVersion: 6.11.0
     ReleaseDate: 2026-09-04
-    PackageUrl: https://github.com/TolgaYigit/syncnite-playnite-plugin/releases/download/v0.3.0/Syncnite_0_3_0.pext
+    PackageUrl: https://github.com/TolgaYigit/syncnite-playnite-plugin/releases/download/v0.3.1/Syncnite_0_3_1.pext
     Changelog:
+      - Removed the API base URL field from settings - it's fixed now, no reason for users to see or edit it
+      - Auto-sync interval floor raised from 1 minute to 60
       - Extension Id changed to "Syncnite" (was an auto-generated GUID) - existing installs need to reinstall and re-pair
       - Added the Syncnite icon so the extension shows its own branding instead of a generic icon on the Add-ons screen
