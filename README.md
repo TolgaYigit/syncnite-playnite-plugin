@@ -19,6 +19,18 @@ Two one-way streams, so they can never conflict:
 
 Each field only ever has one side editing it.
 
+## Supported plugins
+
+Syncnite works fine on its own, but plays specifically well with a couple of others:
+
+| Plugin | What Syncnite does with it |
+| --- | --- |
+| [PlayniteAchievements](https://github.com/justin-delano/PlayniteAchievements) | Reads its local achievement cache (read-only) and pushes unlocked/total counts per game. Off by default in Syncnite's settings until it detects the plugin installed and enabled. |
+| [Duplicate Hider](https://github.com/felixkmh/DuplicateHider) | Duplicate Hider hides all but one copy of a game you own on multiple sources. Syncnite still pushes every copy, hidden ones included — that's what lets the web app's game detail page show an "Also owned on" switcher between them. |
+
+Nothing to configure for Duplicate Hider specifically — it works because Syncnite doesn't skip
+hidden games, not because of any direct integration between the two.
+
 ## Installing
 
 Grab the latest `.pext` from [Releases](../../releases) and drag it onto a running Playnite
