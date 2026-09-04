@@ -1,7 +1,7 @@
-Id: f42cf930-4203-49b8-bf09-62ff06ecb92e
+Id: Syncnite
 Name: Syncnite
 Author: Tolga
-Version: 0.2.1
+Version: 0.3.0
 Module: PlayniteCloudSync.dll
 Type: GenericPlugin
 Icon: pluginicon.png
