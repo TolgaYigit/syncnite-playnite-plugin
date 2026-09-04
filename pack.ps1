@@ -30,4 +30,12 @@ New-Item -ItemType Directory -Force -Path $dist | Out-Null
 & $ToolboxPath pack "$root\bin\$Configuration" $dist
 if ($LASTEXITCODE -ne 0) { throw "Packing failed." }
 
-Write-Host "Packaged to $dist"
+# Toolbox names the .pext after extension.yaml's Id (a GUID) - rename to something a human
+# would actually want to see in a Releases list or on the Playnite Addon Database.
+$versionLine = Get-Content "$root\extension.yaml" | Where-Object { $_ -match "^Version:\s*(.+)$" }
+$version = ($versionLine -replace "^Version:\s*", "").Trim() -replace "\.", "_"
+$packed = Get-ChildItem $dist -Filter "*.pext" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$renamed = Join-Path $dist "Syncnite_$version.pext"
+Move-Item $packed.FullName $renamed -Force
+
+Write-Host "Packaged to $renamed"

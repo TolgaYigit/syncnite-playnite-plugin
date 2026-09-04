@@ -1,8 +1,8 @@
-AddonId: TolgaYigit_Syncnite
+AddonId: Syncnite
 Packages:
   - Version: 0.2.1
     RequiredApiVersion: 6.11.0
     ReleaseDate: 2026-09-04
-    PackageUrl: https://github.com/TolgaYigit/syncnite-playnite-plugin/releases/download/v0.2.1/f42cf930-4203-49b8-bf09-62ff06ecb92e_0_2_1.pext
+    PackageUrl: https://github.com/TolgaYigit/syncnite-playnite-plugin/releases/download/v0.2.1/Syncnite_0_2_1.pext
     Changelog:
       - Added the Syncnite icon so the extension shows its own branding instead of a generic icon on the Add-ons screen
