@@ -6,20 +6,13 @@ namespace PlayniteCloudSync
 {
     public class CloudSyncSettings : INotifyPropertyChanged
     {
-        private string apiBaseUrl = "https://syncnite.com";
         private string deviceToken;
         private bool syncOnStartup = true;
         private bool autoSyncEnabled = true;
-        private int autoSyncIntervalMinutes = 15;
+        private int autoSyncIntervalMinutes = 60;
         private bool syncAchievements = true;
         private DateTime? lastSyncedAt;
         private DateTime? lastPulledAt;
-
-        public string ApiBaseUrl
-        {
-            get => apiBaseUrl;
-            set => SetField(ref apiBaseUrl, value);
-        }
 
         public string DeviceToken
         {
@@ -39,10 +32,13 @@ namespace PlayniteCloudSync
             set => SetField(ref autoSyncEnabled, value);
         }
 
+        // Floored at 60 - anything shorter turns "automatic" syncing into a steady drip of API
+        // calls per active user, which doesn't buy anything real over an hourly cadence (pushes
+        // already happen immediately on library changes; this timer is just the fallback).
         public int AutoSyncIntervalMinutes
         {
             get => autoSyncIntervalMinutes;
-            set => SetField(ref autoSyncIntervalMinutes, value < 1 ? 1 : value);
+            set => SetField(ref autoSyncIntervalMinutes, value < 60 ? 60 : value);
         }
 
         // Whether to read achievement counts from the PlayniteAchievements plugin's local cache
@@ -92,7 +88,6 @@ namespace PlayniteCloudSync
         {
             return new CloudSyncSettings
             {
-                apiBaseUrl = this.apiBaseUrl,
                 deviceToken = this.deviceToken,
                 syncOnStartup = this.syncOnStartup,
                 autoSyncEnabled = this.autoSyncEnabled,
@@ -105,7 +100,6 @@ namespace PlayniteCloudSync
 
         public void CopyFrom(CloudSyncSettings other)
         {
-            ApiBaseUrl = other.apiBaseUrl;
             DeviceToken = other.deviceToken;
             SyncOnStartup = other.syncOnStartup;
             AutoSyncEnabled = other.autoSyncEnabled;

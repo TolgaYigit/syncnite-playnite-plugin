@@ -20,7 +20,6 @@ namespace PlayniteCloudSync
         private readonly TextBlock lastSyncedText;
         private readonly TextBlock errorText;
 
-        private readonly TextBox apiBaseUrlBox;
         private readonly StackPanel pairingPanel;
         private readonly TextBox pairingCodeBox;
         private readonly Button connectButton;
@@ -63,11 +62,6 @@ namespace PlayniteCloudSync
 
             // --- Connection section ---
             root.Children.Add(SectionHeader("Connection"));
-
-            root.Children.Add(new TextBlock { Text = "API base URL", Margin = new Thickness(0, 0, 0, 2), Opacity = 0.8 });
-            apiBaseUrlBox = new TextBox { Text = viewModel.Settings.ApiBaseUrl, Margin = new Thickness(0, 0, 0, 10) };
-            apiBaseUrlBox.TextChanged += (s, e) => viewModel.Settings.ApiBaseUrl = apiBaseUrlBox.Text;
-            root.Children.Add(apiBaseUrlBox);
 
             pairingPanel = new StackPanel();
             pairingPanel.Children.Add(new TextBlock
@@ -254,7 +248,7 @@ namespace PlayniteCloudSync
 
             try
             {
-                var client = new CloudSyncApiClient(apiBaseUrlBox.Text);
+                var client = new CloudSyncApiClient(CloudSyncApiClient.DefaultBaseUrl);
                 var token = await client.RedeemPairingCodeAsync(code);
                 viewModel.SetDeviceToken(token);
                 Refresh();

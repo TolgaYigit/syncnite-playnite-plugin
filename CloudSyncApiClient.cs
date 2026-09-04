@@ -100,6 +100,12 @@ namespace PlayniteCloudSync
 
     public class CloudSyncApiClient
     {
+        // Not user-configurable - there's only one Syncnite backend, and exposing this as a
+        // setting just gave stale/mistyped values a way to silently break sync (a saved
+        // pre-migration syncnite.vercel.app value kept overriding this default even after the
+        // code-level default moved to syncnite.com).
+        public const string DefaultBaseUrl = "https://syncnite.com";
+
         private readonly string apiBaseUrl;
         private readonly string deviceToken;
         private readonly HttpClient http = new HttpClient();

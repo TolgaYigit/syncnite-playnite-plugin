@@ -48,11 +48,7 @@ namespace PlayniteCloudSync
         public bool VerifySettings(out List<string> errors)
         {
             errors = new List<string>();
-            if (string.IsNullOrWhiteSpace(Settings.ApiBaseUrl))
-            {
-                errors.Add("API base URL is required.");
-            }
-            return errors.Count == 0;
+            return true;
         }
 
         // Background syncs save settings (LastSyncedAt) via a freshly-deserialized instance,

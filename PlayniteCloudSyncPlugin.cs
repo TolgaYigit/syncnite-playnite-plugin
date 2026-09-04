@@ -22,7 +22,7 @@ namespace PlayniteCloudSync
         // with extension.yaml's own Version field and web/src/lib/versions.ts's
         // LATEST_PLUGIN_VERSION whenever this is bumped - Playnite's plugin loader doesn't
         // expose a way to read a plugin's own manifest version back from inside itself.
-        public const string PluginVersion = "0.2.0";
+        public const string PluginVersion = "0.3.1";
 
         private readonly CloudSyncSettingsViewModel settingsViewModel;
         private Timer autoSyncTimer;
@@ -169,7 +169,7 @@ namespace PlayniteCloudSync
             }
 
             var ct = progress?.CancelToken ?? CancellationToken.None;
-            var client = new CloudSyncApiClient(settings.ApiBaseUrl, settings.DeviceToken);
+            var client = new CloudSyncApiClient(CloudSyncApiClient.DefaultBaseUrl, settings.DeviceToken);
 
             if (progress != null)
             {
