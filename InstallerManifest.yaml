@@ -1,8 +1,9 @@
 AddonId: Syncnite
 Packages:
-  - Version: 0.2.1
+  - Version: 0.3.0
     RequiredApiVersion: 6.11.0
     ReleaseDate: 2026-09-04
-    PackageUrl: https://github.com/TolgaYigit/syncnite-playnite-plugin/releases/download/v0.2.1/Syncnite_0_2_1.pext
+    PackageUrl: https://github.com/TolgaYigit/syncnite-playnite-plugin/releases/download/v0.3.0/Syncnite_0_3_0.pext
     Changelog:
+      - Extension Id changed to "Syncnite" (was an auto-generated GUID) - existing installs need to reinstall and re-pair
       - Added the Syncnite icon so the extension shows its own branding instead of a generic icon on the Add-ons screen
