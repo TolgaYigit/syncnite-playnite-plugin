@@ -22,7 +22,7 @@ namespace PlayniteCloudSync
         // with extension.yaml's own Version field and web/src/lib/versions.ts's
         // LATEST_PLUGIN_VERSION whenever this is bumped - Playnite's plugin loader doesn't
         // expose a way to read a plugin's own manifest version back from inside itself.
-        public const string PluginVersion = "0.3.1";
+        public const string PluginVersion = "0.3.2";
 
         private readonly CloudSyncSettingsViewModel settingsViewModel;
         private Timer autoSyncTimer;
@@ -224,7 +224,26 @@ namespace PlayniteCloudSync
                 })
                 .ToList();
 
-            var pushedCount = await client.PushGamesAsync(games, PluginVersion, ct);
+            // Sent in batches, not one request for the whole library - Vercel's serverless
+            // functions (what /api/sync/push runs on) hard-cap a request body at 4.5MB,
+            // enforced before our code even runs, so it comes back as a bare HTTP 413 with no
+            // JSON body to show the user. A ~500-byte-per-game payload crosses that around the
+            // low tens of thousands of games; reported live by a user with a five-digit
+            // library. Chunk size is deliberately generous (not just under the wire) so a
+            // very large library still finishes in a handful of requests, comfortably inside
+            // the server's own sync-push rate limit.
+            const int PushChunkSize = 2000;
+            var pushedCount = 0;
+            for (var offset = 0; offset < games.Count; offset += PushChunkSize)
+            {
+                ct.ThrowIfCancellationRequested();
+                var chunk = games.Skip(offset).Take(PushChunkSize).ToList();
+                if (progress != null && games.Count > PushChunkSize)
+                {
+                    progress.Text = $"Pushing your library to the cloud... ({Math.Min(offset + PushChunkSize, games.Count)}/{games.Count})";
+                }
+                pushedCount += await client.PushGamesAsync(chunk, PluginVersion, ct);
+            }
             logger.Info($"Syncnite: pushed {pushedCount} games.");
             settings.LastSyncedAt = DateTime.UtcNow;
 
