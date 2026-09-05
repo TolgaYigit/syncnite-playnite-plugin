@@ -231,16 +231,18 @@ namespace PlayniteCloudSync
             // low tens of thousands of games; reported live by a user with a five-digit
             // library. Chunk size is deliberately generous (not just under the wire) so a
             // very large library still finishes in a handful of requests, comfortably inside
-            // the server's own sync-push rate limit.
+            // the server's own sync-push rate limit. See Batching.Chunk (and its tests) for the
+            // chunking logic itself.
             const int PushChunkSize = 2000;
             var pushedCount = 0;
-            for (var offset = 0; offset < games.Count; offset += PushChunkSize)
+            var pushedSoFar = 0;
+            foreach (var chunk in Batching.Chunk(games, PushChunkSize))
             {
                 ct.ThrowIfCancellationRequested();
-                var chunk = games.Skip(offset).Take(PushChunkSize).ToList();
+                pushedSoFar += chunk.Count;
                 if (progress != null && games.Count > PushChunkSize)
                 {
-                    progress.Text = $"Pushing your library to the cloud... ({Math.Min(offset + PushChunkSize, games.Count)}/{games.Count})";
+                    progress.Text = $"Pushing your library to the cloud... ({pushedSoFar}/{games.Count})";
                 }
                 pushedCount += await client.PushGamesAsync(chunk, PluginVersion, ct);
             }

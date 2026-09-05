@@ -108,12 +108,16 @@ namespace PlayniteCloudSync
 
         private readonly string apiBaseUrl;
         private readonly string deviceToken;
-        private readonly HttpClient http = new HttpClient();
+        private readonly HttpClient http;
 
-        public CloudSyncApiClient(string apiBaseUrl, string deviceToken = null)
+        // `handler` is only ever passed in tests - a real caller always gets the (default null)
+        // path, i.e. a normal HttpClient making real requests. Lets tests substitute a fake
+        // HttpMessageHandler instead of hitting the network, without touching call sites.
+        public CloudSyncApiClient(string apiBaseUrl, string deviceToken = null, HttpMessageHandler handler = null)
         {
             this.apiBaseUrl = apiBaseUrl.TrimEnd('/');
             this.deviceToken = deviceToken;
+            this.http = handler != null ? new HttpClient(handler) : new HttpClient();
         }
 
         public async Task<string> RedeemPairingCodeAsync(string code)

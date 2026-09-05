@@ -40,6 +40,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- PlayniteCloudSync.Tests lives in a subfolder of this project, so the SDK's default
+         "**/*.cs" glob would otherwise also compile the test files into this DLL (and fail,
+         since this project doesn't reference xunit). -->
+    <Compile Remove="PlayniteCloudSync.Tests/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Settings UI is built in plain C# (no .xaml file), so these framework references are
          enough - no need for the WindowsDesktop SDK / XAML markup compiler. -->
     <Reference Include="PresentationCore" />

@@ -56,6 +56,21 @@ Also needs a local Playnite install, for `Toolbox.exe`, used to package the `.pe
 Packages the built plugin to `dist/`. Pass `-ToolboxPath` explicitly if it can't find your
 Playnite install automatically.
 
+## Testing
+
+```powershell
+dotnet test PlayniteCloudSync.Tests/PlayniteCloudSync.Tests.csproj
+```
+
+(There's no `.sln` tying the two projects together, so a bare `dotnet test` in the repo root
+picks up the main plugin project instead - which isn't a test project - and quietly does
+nothing. Point it at the test project explicitly, as above.)
+
+Covers `Batching` (the chunking logic behind large-library sync) and `CloudSyncApiClient`
+(request/response handling, including the 413-with-no-body case that motivated writing these
+in the first place) against a fake `HttpMessageHandler` - no real network calls, no Playnite
+install needed. Runs automatically on every push and PR via GitHub Actions.
+
 ## Feedback
 
 Bugs and feature requests go to
